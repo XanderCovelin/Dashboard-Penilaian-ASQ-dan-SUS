@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Evaluasi ASQ & SUS</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full font-sans text-slate-800 antialiased flex flex-col">
+
+    <!-- Top Navbar -->
+    <header class="bg-indigo-700 text-white shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 p-2 rounded-xl border border-indigo-500 shadow-inner">
+                    <i class="fa-solid fa-chart-line text-xl text-indigo-100"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">UX Research Analytics</h1>
+                    <p class="text-xs text-indigo-200">Evaluasi Usability: SUS & ASQ Dashboard</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button onclick="openModal('general')" class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-2 rounded-lg shadow transition flex items-center space-x-2 border border-indigo-500">
+                    <i class="fa-solid fa-plus text-xs"></i>
+                    <span>Tambah Data</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="flex-1 flex flex-col md:flex-row max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 gap-6">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="w-full md:w-64 shrink-0">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sticky top-24">
+                <nav class="space-y-1">
+                    <button onclick="switchTab('overview')" id="nav-overview" class="tab-btn w-full flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-xl transition bg-indigo-50 text-indigo-700">
+                        <i class="fa-solid fa-gauge-high w-5 text-center"></i>
+                        <span>Ringkasan (Overview)</span>
+                    </button>
+                    <button onclick="switchTab('sus')" id="nav-sus" class="tab-btn w-full flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-xl text-slate-600 hover:bg-slate-50 transition">
+                        <i class="fa-solid fa-sliders w-5 text-center"></i>
+                        <span>Evaluasi SUS</span>
+                    </button>
+                    <button onclick="switchTab('asq')" id="nav-asq" class="tab-btn w-full flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-xl text-slate-600 hover:bg-slate-50 transition">
+                        <i class="fa-solid fa-clipboard-question w-5 text-center"></i>
+                        <span>Evaluasi ASQ</span>
+                    </button>
+                    <button onclick="switchTab('management')" id="nav-management" class="tab-btn w-full flex items-center space-x-3 px-4 py-3 text-sm font-medium rounded-xl text-slate-600 hover:bg-slate-50 transition">
+                        <i class="fa-solid fa-database w-5 text-center"></i>
+                        <span>Manajemen & Ekspor</span>
+                    </button>
+                </nav>
+
+                <div class="mt-8 pt-4 border-t border-slate-100">
+                    <div class="bg-slate-50 rounded-xl p-3 text-xs text-slate-500 space-y-1">
+                        <div class="font-semibold text-slate-700"><i class="fa-solid fa-circle-info mr-1 text-indigo-600"></i> Informasi</div>
+                        <p>Data tersimpan secara lokal di browser Anda (LocalStorage).</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="flex-1 min-w-0">
+
+            <!-- TAB 1: OVERVIEW -->
+            <div id="tab-overview" class="tab-content space-y-6">
+                <!-- Top Summary Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Responden</span>
+                            <div class="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-baseline justify-between">
+                            <span id="stat-total-resp" class="text-2xl font-bold text-slate-800">0</span>
+                            <span class="text-xs text-emerald-600 font-medium"><i class="fa-solid fa-arrow-up"></i> Aktif</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Rata-rata Skor SUS</span>
+                            <div class="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+                                <i class="fa-solid fa-gauge"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-baseline justify-between">
+                            <div>
+                                <span id="stat-avg-sus" class="text-2xl font-bold text-slate-800">0.0</span>
+                                <span class="text-xs text-slate-400">/100</span>
+                            </div>
+                            <span id="stat-sus-adjective" class="text-xs px-2.5 py-1 bg-emerald-100 text-emerald-800 font-semibold rounded-full">-</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Rata-rata Skor ASQ</span>
+                            <div class="p-2 bg-sky-50 text-sky-600 rounded-xl">
+                                <i class="fa-solid fa-star"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-baseline justify-between">
+                            <div>
+                                <span id="stat-avg-asq" class="text-2xl font-bold text-slate-800">0.0</span>
+                                <span class="text-xs text-slate-400">/7.0</span>
+                            </div>
+                            <span class="text-xs text-sky-600 font-medium">Skenario Tasks</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Tingkat Keberhasilan</span>
+                            <div class="p-2 bg-amber-50 text-amber-600 rounded-xl">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-baseline justify-between">
+                            <span id="stat-success-rate" class="text-2xl font-bold text-slate-800">0%</span>
+                            <span class="text-xs text-slate-400">Task Completion</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <h2 class="text-base font-bold text-slate-800 mb-4 flex items-center justify-between">
+                            <span>Distribusi Rating Adjektif SUS</span>
+                            <i class="fa-solid fa-chart-pie text-slate-400 text-sm"></i>
+                        </h2>
+                        <div class="relative h-72">
+                            <canvas id="susChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <h2 class="text-base font-bold text-slate-800 mb-4 flex items-center justify-between">
+                            <span>Rata-rata ASQ per Skenario Tugas</span>
+                            <i class="fa-solid fa-chart-column text-slate-400 text-sm"></i>
+                        </h2>
+                        <div class="relative h-72">
+                            <canvas id="asqChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Insight Table -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <h2 class="text-base font-bold text-slate-800 mb-4">Ringkasan Evaluabilitas Sistem</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="border-b border-slate-200 text-slate-500 font-semibold bg-slate-50">
+                                    <th class="p-3 rounded-l-xl">Metrik Evaluasi</th>
+                                    <th class="p-3">Skor / Nilai</th>
+                                    <th class="p-3">Status / Kategori</th>
+                                    <th class="p-3 rounded-r-xl">Rekomendasi Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100" id="overview-summary-table">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: SUS EVALUATION -->
+            <div id="tab-sus" class="tab-content hidden space-y-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-4">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-800">Formulir Penilaian SUS (System Usability Scale)</h2>
+                            <p class="text-xs text-slate-500 mt-1">Berikan penilaian dari skala 1 (Sangat Tidak Setuju) hingga 5 (Sangat Setuju).</p>
+                        </div>
+                        <button onclick="fillSampleSUS()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-3 py-1.5 rounded-lg transition self-start sm:self-auto">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-1 text-indigo-600"></i> Isi Sampel Otomatis
+                        </button>
+                    </div>
+
+                    <form id="form-sus" onsubmit="submitSUS(event)" class="mt-6 space-y-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Nama / ID Responden</label>
+                                <input type="text" id="sus-respondent" required class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Contoh: Responden #01">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal Evaluasi</label>
+                                <input type="date" id="sus-date" required class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                        </div>
+
+                        <div class="space-y-4 pt-2" id="sus-questions-container">
+                            <!-- Populated dynamically -->
+                        </div>
+
+                        <div class="flex justify-end pt-4 border-t border-slate-100">
+                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2.5 rounded-xl text-sm shadow transition flex items-center space-x-2">
+                                <i class="fa-solid fa-floppy-disk text-xs"></i>
+                                <span>Simpan Penilaian SUS</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- SUS Respondents History -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <h2 class="text-base font-bold text-slate-800 mb-4">Riwayat Penilaian SUS Responden</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="border-b border-slate-200 text-slate-500 font-semibold bg-slate-50">
+                                    <th class="p-3 rounded-l-xl">Responden</th>
+                                    <th class="p-3">Tanggal</th>
+                                    <th class="p-3">Skor SUS</th>
+                                    <th class="p-3">Grade</th>
+                                    <th class="p-3">Adjektif</th>
+                                    <th class="p-3">Acceptability</th>
+                                    <th class="p-3 rounded-r-xl text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100" id="sus-table-body">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: ASQ EVALUATION -->
+            <div id="tab-asq" class="tab-content hidden space-y-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-4">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-800">Formulir Penilaian ASQ (After-Scenario Questionnaire)</h2>
+                            <p class="text-xs text-slate-500 mt-1">Evaluasi spesifik per skenario tugas (Skala 1 = Sangat Tidak Setuju s.d. 7 = Sangat Setuju).</p>
+                        </div>
+                        <button onclick="fillSampleASQ()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-3 py-1.5 rounded-lg transition self-start sm:self-auto">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-1 text-indigo-600"></i> Isi Sampel Otomatis
+                        </button>
+                    </div>
+
+                    <form id="form-asq" onsubmit="submitASQ(event)" class="mt-6 space-y-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Nama / ID Responden</label>
+                                <input type="text" id="asq-respondent" required class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Contoh: Responden #01">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Pilih Skenario Tugas</label>
+                                <select id="asq-scenario" required class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                                    <option value="Skenario 1: Pendaftaran Akun & Login">Skenario 1: Pendaftaran Akun & Login</option>
+                                    <option value="Skenario 2: Pencarian & Filter Produk">Skenario 2: Pencarian & Filter Produk</option>
+                                    <option value="Skenario 3: Proses Checkout & Pembayaran">Skenario 3: Proses Checkout & Pembayaran</option>
+                                    <option value="Skenario 4: Pelacakan Status Pesanan">Skenario 4: Pelacakan Status Pesanan</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Waktu Pengerjaan (Detik)</label>
+                                <input type="number" id="asq-time" min="1" required class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Contoh: 45">
+                            </div>
+                        </div>
+
+                        <!-- 3 ASQ Questions -->
+                        <div class="space-y-4 pt-2">
+                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                <label class="block text-sm font-medium text-slate-800 mb-2">1. Kemudahan menyelesaikan tugas dalam skenario ini:</label>
+                                <div class="flex items-center justify-between text-xs text-slate-500 px-1 mb-1">
+                                    <span>1 (Sangat Sulit)</span>
+                                    <span>7 (Sangat Mudah)</span>
+                                </div>
+                                <div class="grid grid-cols-7 gap-2">
+                                    <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="asq_q1" value="1" required class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">1</span></label>
+                                    <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="asq_q1" value="2" class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">2</span></label>
+                                    <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="asq_q1" value="3" class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">3</span></label>
+                                    <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="asq_q1" value="4" class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">4</span></label>
+                                    <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="asq_q1" value="5" class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">5</span></label>
+                                    <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="asq_q1" value="6" class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">6</span></label>
+                                    <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="asq_q1" value="7" class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">7</span></label>
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                <label class="block text-sm font-medium text-slate-800 mb-2">2. Kecukupan waktu yang dibutuhkan untuk menyelesaikan tugas:</label>
+                                <div class="flex items-center justify-between text-xs text-slate-500 px-1 mb-1">
+                                    <span>1 (Sangat Tidak Cukup)</span>
+                                    <span>7 (Sangat Cukup)</span>
+                                </div>
+                                <div class="grid grid-cols-7 gap-2">
+                                    <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="asq_q2" value="1" required class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">1</span></label>
+                                    <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="asq_q2" value="2" class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">2</span></label>
+                                    <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="asq_q2" value="3" class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">3</span></label>
+                                    <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="asq_q2" value="4" class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">4</span></label>
+                                    <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="asq_q2" value="5" class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">5</span></label>
+                                    <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="asq_q2" value="6" class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">6</span></label>
+                                    <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="asq_q2" value="7" class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">7</span></label>
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                <label class="block text-sm font-medium text-slate-800 mb-2">3. Kecukupan informasi/bantuan pendukung (panduan/label) saat tugas:</label>
+                                <div class="flex items-center justify-between text-xs text-slate-500 px-1 mb-1">
+                                    <span>1 (Sangat Tidak Cukup)</span>
+                                    <span>7 (Sangat Cukup)</span>
+                                </div>
+                                <div class="grid grid-cols-7 gap-2">
+                                    <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="asq_q3" value="1" required class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">1</span></label>
+                                    <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="asq_q3" value="2" class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">2</span></label>
+                                    <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="asq_q3" value="3" class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">3</span></label>
+                                    <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="asq_q3" value="4" class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">4</span></label>
+                                    <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="asq_q3" value="5" class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">5</span></label>
+                                    <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="asq_q3" value="6" class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">6</span></label>
+                                    <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="asq_q3" value="7" class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">7</span></label>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Catatan / Kendala Responden (Opsional)</label>
+                                <textarea id="asq-notes" rows="2" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Tuliskan kendala atau komentar responden selama skenario..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end pt-4 border-t border-slate-100">
+                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2.5 rounded-xl text-sm shadow transition flex items-center space-x-2">
+                                <i class="fa-solid fa-floppy-disk text-xs"></i>
+                                <span>Simpan Penilaian ASQ</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- ASQ History Table -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <h2 class="text-base font-bold text-slate-800 mb-4">Riwayat Penilaian ASQ Skenario</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="border-b border-slate-200 text-slate-500 font-semibold bg-slate-50">
+                                    <th class="p-3 rounded-l-xl">Responden</th>
+                                    <th class="p-3">Skenario</th>
+                                    <th class="p-3">Waktu</th>
+                                    <th class="p-3">Skor Rata-rata</th>
+                                    <th class="p-3">Catatan</th>
+                                    <th class="p-3 rounded-r-xl text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100" id="asq-table-body">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: MANAGEMENT & EXPORT -->
+            <div id="tab-management" class="tab-content hidden space-y-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <h2 class="text-lg font-bold text-slate-800 mb-2">Manajemen Data & Ekspor</h2>
+                    <p class="text-xs text-slate-500 mb-6">Kelola seluruh basis data evaluasi usability aplikasi Anda, unduh laporan dalam format CSV/JSON, atau reset data.</p>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+                        <button onclick="exportCSV()" class="p-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-2xl border border-emerald-200 flex items-center space-x-3 transition text-left">
+                            <div class="p-3 bg-emerald-600 text-white rounded-xl shadow">
+                                <i class="fa-solid fa-file-csv text-lg"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-sm">Ekspor ke CSV</div>
+                                <div class="text-xs text-emerald-600">Unduh data rekapitulasi</div>
+                            </div>
+                        </button>
+
+                        <button onclick="exportJSON()" class="p-4 bg-sky-50 hover:bg-sky-100 text-sky-800 rounded-2xl border border-sky-200 flex items-center space-x-3 transition text-left">
+                            <div class="p-3 bg-sky-600 text-white rounded-xl shadow">
+                                <i class="fa-solid fa-file-code text-lg"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-sm">Ekspor ke JSON</div>
+                                <div class="text-xs text-sky-600">Cadangan basis data lengkap</div>
+                            </div>
+                        </button>
+
+                        <button onclick="resetDataModal()" class="p-4 bg-rose-50 hover:bg-rose-100 text-rose-800 rounded-2xl border border-rose-200 flex items-center space-x-3 transition text-left">
+                            <div class="p-3 bg-rose-600 text-white rounded-xl shadow">
+                                <i class="fa-solid fa-trash-can text-lg"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-sm">Reset Data</div>
+                                <div class="text-xs text-rose-600">Kembalikan ke data default</div>
+                            </div>
+                        </button>
+                    </div>
+
+                    <h3 class="text-base font-bold text-slate-800 mb-4">Seluruh Data Responden (SUS & ASQ Terpadu)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="border-b border-slate-200 text-slate-500 font-semibold bg-slate-50">
+                                    <th class="p-3 rounded-l-xl">Tipe Evaluasi</th>
+                                    <th class="p-3">Responden</th>
+                                    <th class="p-3">Detail / Skenario</th>
+                                    <th class="p-3">Skor</th>
+                                    <th class="p-3 rounded-r-xl">Keterangan</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100" id="master-table-body">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- General Modal for Add Quick Data -->
+    <div id="modal-container" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 class="text-base font-bold text-slate-800">Pilih Jenis Evaluasi</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-500">Pilih formulir evaluasi yang ingin Anda isi saat ini:</p>
+            <div class="grid grid-cols-1 gap-3 pt-2">
+                <button onclick="closeModal(); switchTab('sus');" class="w-full p-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium rounded-xl flex items-center justify-between transition">
+                    <span class="flex items-center space-x-2"><i class="fa-solid fa-sliders"></i><span>Formulir SUS (System Usability Scale)</span></span>
+                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                </button>
+                <button onclick="closeModal(); switchTab('asq');" class="w-full p-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium rounded-xl flex items-center justify-between transition">
+                    <span class="flex items-center space-x-2"><i class="fa-solid fa-clipboard-question"></i><span>Formulir ASQ (After-Scenario)</span></span>
+                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg text-sm z-50 flex items-center space-x-3 transform translate-y-20 opacity-0 transition-all duration-300">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toast-msg">Berhasil disimpan!</span>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Default Sample Data
+        const defaultSUSData = [
+            { id: 1, respondent: "Andi Pratama", date: "2026-05-10", scores: [4,2,4,2,4,2,4,2,4,2], susScore: 80.0, grade: "B", adjective: "Good", acceptability: "Acceptable" },
+            { id: 2, respondent: "Siti Rahma", date: "2026-05-11", scores: [5,1,5,1,5,1,4,1,5,1], susScore: 92.5, grade: "A+", adjective: "Best Imaginable", acceptability: "Acceptable" },
+            { id: 3, respondent: "Budi Santoso", date: "2026-05-12", scores: [3,3,3,3,3,3,3,3,3,3], susScore: 50.0, grade: "D", adjective: "Poor", acceptability: "Not Acceptable" },
+            { id: 4, respondent: "Dewi Lestari", date: "2026-05-13", scores: [4,2,5,2,4,1,5,2,4,2], susScore: 82.5, grade: "A", adjective: "Excellent", acceptability: "Acceptable" }
+        ];
+
+        const defaultASQData = [
+            { id: 1, respondent: "Andi Pratama", scenario: "Skenario 1: Pendaftaran Akun & Login", time: 35, q1: 6, q2: 6, q3: 5, avg: 5.67, notes: "Cukup lancar prosesnya." },
+            { id: 2, respondent: "Siti Rahma", scenario: "Skenario 1: Pendaftaran Akun & Login", time: 25, q1: 7, q2: 7, q3: 7, avg: 7.00, notes: "Sangat mudah dan intuitif." },
+            { id: 3, respondent: "Andi Pratama", scenario: "Skenario 2: Pencarian & Filter Produk", time: 50, q1: 5, q2: 4, q3: 5, avg: 4.67, notes: "Filter kategori agak tersembunyi." },
+            { id: 4, respondent: "Budi Santoso", scenario: "Skenario 3: Proses Checkout & Pembayaran", time: 90, q1: 3, q2: 3, q3: 4, avg: 3.33, notes: "Halaman pembayaran agak lambat." },
+            { id: 5, respondent: "Dewi Lestari", scenario: "Skenario 4: Pelacakan Status Pesanan", time: 40, q1: 6, q2: 6, q3: 6, avg: 6.00, notes: "Informasi status jelas." }
+        ];
+
+        // SUS 10 Questions
+        const susQuestionsList = [
+            "1. Saya pikir saya akan sering menggunakan sistem ini.",
+            "2. Saya merasa sistem ini terlalu rumit yang tidak perlu.",
+            "3. Saya merasa sistem ini mudah digunakan.",
+            "4. Saya pikir saya memerlukan bantuan dari tenaga ahli agar dapat menggunakan sistem ini.",
+            "5. Saya merasa berbagai fitur dalam sistem ini terintegrasi dengan baik.",
+            "6. Saya merasa ada terlalu banyak inkonsistensi dalam sistem ini.",
+            "7. Saya membayangkan bahwa kebanyakan orang akan belajar menggunakan sistem ini dengan sangat cepat.",
+            "8. Saya merasa sistem ini sangat rumit/sulit digunakan.",
+            "9. Saya merasa sangat percaya diri menggunakan sistem ini.",
+            "10. Saya perlu mempelajari banyak hal sebelum saya dapat mulai menggunakan sistem ini."
+        ];
+
+        // State Management
+        let susData = JSON.parse(localStorage.getItem('asq_sus_sus')) || defaultSUSData;
+        let asqData = JSON.parse(localStorage.getItem('asq_sus_asq')) || defaultASQData;
+
+        let susChartInstance = null;
+        let asqChartInstance = null;
+
+        // Initialize App on DOM Load
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('sus-date').valueAsDate = new Date();
+            renderSUSQuestionsForm();
+            refreshAll();
+        });
+
+        function saveData() {
+            localStorage.setItem('asq_sus_sus', JSON.stringify(susData));
+            localStorage.setItem('asq_sus_asq', JSON.stringify(asqData));
+        }
+
+        // Tab Navigation
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('bg-indigo-50', 'text-indigo-700');
+                el.classList.add('text-slate-600', 'hover:bg-slate-50');
+            });
+
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            if(activeBtn) {
+                activeBtn.classList.add('bg-indigo-50', 'text-indigo-700');
+                activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-50');
+            }
+            if(tabId === 'overview') {
+                renderCharts();
+            }
+        }
+
+        // Render SUS Form Questions
+        function renderSUSQuestionsForm() {
+            const container = document.getElementById('sus-questions-container');
+            container.innerHTML = '';
+            susQuestionsList.forEach((q, idx) => {
+                const itemNo = idx + 1;
+                const isEven = itemNo % 2 === 0;
+                const badgeText = isEven ? 'Negatif (Genap)' : 'Positif (Ganjil)';
+                const badgeClass = isEven ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200';
+
+                const html = `
+                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-slate-800">${q}</span>
+                            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badgeClass}">${badgeText}</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-slate-500 px-1 pt-1">
+                            <span>1 (Sangat Tidak Setuju)</span>
+                            <span>5 (Sangat Setuju)</span>
+                        </div>
+                        <div class="grid grid-cols-5 gap-2">
+                            <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="sus_q${itemNo}" value="1" required class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">1</span></label>
+                            <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="sus_q${itemNo}" value="2" class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">2</span></label>
+                            <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="sus_q${itemNo}" value="3" class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">3</span></label>
+                            <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="sus_q${itemNo}" value="4" class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">4</span></label>
+                            <label class="flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-indigo-50"><input type="radio" name="sus_q${itemNo}" value="5" class="text-indigo-600 focus:ring-indigo-500"><span class="mt-1 text-xs">5</span></label>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        // Calculation Helpers for SUS
+        function calculateSUSScore(scores) {
+            // scores is array of 10 integers (1-5)
+            let oddSum = 0;
+            let evenSum = 0;
+            for(let i=0; i<10; i++) {
+                if(i % 2 === 0) { // odd items: index 0, 2, 4, 6, 8 (Q1, Q3, Q5, Q7, Q9)
+                    oddSum += scores[i];
+                } else { // even items: index 1, 3, 5, 7, 9 (Q2, Q4, Q6, Q8, Q10)
+                    evenSum += scores[i];
+                }
+            }
+            const raw = ((oddSum - 5) + (25 - evenSum)) * 2.5;
+            return Math.round(raw * 10) / 10;
+        }
+
+        function getSUSClassification(score) {
+            let grade = 'F';
+            let adjective = 'Worst Imaginable';
+            let acceptability = 'Not Acceptable';
+
+            if (score >= 85.5) { grade = 'A+'; adjective = 'Best Imaginable'; acceptability = 'Acceptable'; }
+            else if (score >= 80.3) { grade = 'A'; adjective = 'Excellent'; acceptability = 'Acceptable'; }
+            else if (score >= 74.1) { grade = 'B'; adjective = 'Good'; acceptability = 'Acceptable'; }
+            else if (score >= 72.6) { grade = 'C+'; adjective = 'Good'; acceptability = 'Acceptable'; }
+            else if (score >= 51.7) { grade = 'C'; adjective = 'OK'; acceptability = 'Marginal'; }
+            else if (score >= 35.7) { grade = 'D'; adjective = 'Poor'; acceptability = 'Not Acceptable'; }
+            else { grade = 'F'; adjective = 'Worst Imaginable'; acceptability = 'Not Acceptable'; }
+
+            return { grade, adjective, acceptability };
+        }
+
+        // Submit SUS Form
+        function submitSUS(e) {
+            e.preventDefault();
+            const respondent = document.getElementById('sus-respondent').value;
+            const date = document.getElementById('sus-date').value;
+            let scores = [];
+            for(let i=1; i<=10; i++) {
+                const val = document.querySelector(`input[name="sus_q${i}"]:checked`);
+                if(!val) return showToast("Mohon lengkapi seluruh pertanyaan SUS!", "error");
+                scores.push(parseInt(val.value));
+            }
+
+            const susScore = calculateSUSScore(scores);
+            const { grade, adjective, acceptability } = getSUSClassification(susScore);
+
+            const newItem = {
+                id: Date.now(),
+                respondent,
+                date,
+                scores,
+                susScore,
+                grade,
+                adjective,
+                acceptability
+            };
+
+            susData.push(newItem);
+            saveData();
+            refreshAll();
+            document.getElementById('form-sus').reset();
+            document.getElementById('sus-date').valueAsDate = new Date();
+            showToast("Penilaian SUS berhasil disimpan!");
+            switchTab('overview');
+        }
+
+        // Submit ASQ Form
+        function submitASQ(e) {
+            e.preventDefault();
+            const respondent = document.getElementById('asq-respondent').value;
+            const scenario = document.getElementById('asq-scenario').value;
+            const time = parseInt(document.getElementById('asq-time').value);
+            const q1 = parseInt(document.querySelector('input[name="asq_q1"]:checked')?.value || 0);
+            const q2 = parseInt(document.querySelector('input[name="asq_q2"]:checked')?.value || 0);
+            const q3 = parseInt(document.querySelector('input[name="asq_q3"]:checked')?.value || 0);
+            const notes = document.getElementById('asq-notes').value || "-";
+
+            if(!q1 || !q2 || !q3) return showToast("Mohon lengkapi penilaian skala 1-7 ASQ!", "error");
+
+            const avg = Math.round(((q1 + q2 + q3) / 3) * 100) / 100;
+
+            const newItem = {
+                id: Date.now(),
+                respondent,
+                scenario,
+                time,
+                q1, q2, q3,
+                avg,
+                notes
+            };
+
+            asqData.push(newItem);
+            saveData();
+            refreshAll();
+            document.getElementById('form-asq').reset();
+            showToast("Penilaian ASQ berhasil disimpan!");
+            switchTab('overview');
+        }
+
+        // Auto Sample Fillers
+        function fillSampleSUS() {
+            document.getElementById('sus-respondent').value = "Responden Uji #" + Math.floor(Math.random() * 899 + 100);
+            for(let i=1; i<=10; i++) {
+                const randVal = Math.floor(Math.random() * 3) + 3; // 3, 4, 5
+                const radio = document.querySelector(`input[name="sus_q${i}"][value="${randVal}"]`);
+                if(radio) radio.checked = true;
+            }
+        }
+
+        function fillSampleASQ() {
+            document.getElementById('asq-respondent').value = "Responden Uji #" + Math.floor(Math.random() * 899 + 100);
+            document.getElementById('asq-time').value = Math.floor(Math.random() * 60) + 20;
+            document.getElementById('asq-notes').value = "Navigasi cukup responsif namun perlu sedikit perbaikan tata letak.";
+            for(let q of ['asq_q1', 'asq_q2', 'asq_q3']) {
+                const randVal = Math.floor(Math.random() * 3) + 5; // 5, 6, 7
+                const radio = document.querySelector(`input[name="${q}"][value="${randVal}"]`);
+                if(radio) radio.checked = true;
+            }
+        }
+
+        // Delete handlers
+        function deleteSUS(id) {
+            susData = susData.filter(item => item.id !== id);
+            saveData();
+            refreshAll();
+            showToast("Data SUS dihapus.");
+        }
+
+        function deleteASQ(id) {
+            asqData = asqData.filter(item => item.id !== id);
+            saveData();
+            refreshAll();
+            showToast("Data ASQ dihapus.");
+        }
+
+        // Refresh Tables and Stats
+        function refreshAll() {
+            renderSUSTable();
+            renderASQTable();
+            renderMasterTable();
+            updateOverviewStats();
+            renderCharts();
+        }
+
+        function updateOverviewStats() {
+            const totalResp = new Set([...susData.map(d => d.respondent), ...asqData.map(d => d.respondent)]).size;
+            document.getElementById('stat-total-resp').innerText = totalResp;
+
+            let avgSUS = 0;
+            if(susData.length > 0) {
+                const sum = susData.reduce((acc, curr) => acc + curr.susScore, 0);
+                avgSUS = Math.round((sum / susData.length) * 10) / 10;
+            }
+            document.getElementById('stat-avg-sus').innerText = avgSUS;
+            const adjInfo = getSUSClassification(avgSUS);
+            const adjBadge = document.getElementById('stat-sus-adjective');
+            adjBadge.innerText = adjInfo.adjective;
+
+            let avgASQ = 0;
+            if(asqData.length > 0) {
+                const sumASQ = asqData.reduce((acc, curr) => acc + curr.avg, 0);
+                avgASQ = Math.round((sumASQ / asqData.length) * 100) / 100;
+            }
+            document.getElementById('stat-avg-asq').innerText = avgASQ;
+
+            // Success Rate estimation based on ASQ avg >= 5 or SUS >= 68
+            let successCount = asqData.filter(d => d.avg >= 5.0).length;
+            let successRate = asqData.length > 0 ? Math.round((successCount / asqData.length) * 100) : 0;
+            if(asqData.length === 0 && susData.length > 0) {
+                successRate = Math.round((susData.filter(d => d.susScore >= 68).length / susData.length) * 100);
+            }
+            document.getElementById('stat-success-rate').innerText = successRate + '%';
+
+            // Overview Summary Table
+            const overviewTable = document.getElementById('overview-summary-table');
+            overviewTable.innerHTML = `
+                <tr>
+                    <td class="p-3 font-medium text-slate-800">System Usability Scale (SUS)</td>
+                    <td class="p-3 font-bold text-indigo-600">${avgSUS} / 100</td>
+                    <td class="p-3"><span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-semibold">${adjInfo.adjective} (${adjInfo.acceptability})</span></td>
+                    <td class="p-3 text-slate-600">Sistem berada pada kategori ${adjInfo.adjective}. Tingkatkan aspek interaksi yang kurang intuitif.</td>
+                </tr>
+                <tr>
+                    <td class="p-3 font-medium text-slate-800">After-Scenario Questionnaire (ASQ)</td>
+                    <td class="p-3 font-bold text-sky-600">${avgASQ} / 7.0</td>
+                    <td class="p-3"><span class="px-2.5 py-1 bg-sky-100 text-sky-800 rounded-full text-xs font-semibold">Memuaskan</span></td>
+                    <td class="p-3 text-slate-600">Evaluasi per skenario menunjukkan performa tugas pengguna berjalan lancar.</td>
+                </tr>
+            `;
+        }
+
+        function renderSUSTable() {
+            const tbody = document.getElementById('sus-table-body');
+            tbody.innerHTML = '';
+            if(susData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">Belum ada data penilaian SUS.</td></tr>`;
+                return;
+            }
+            susData.forEach(item => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-3 font-medium text-slate-800">${item.respondent}</td>
+                        <td class="p-3 text-slate-600">${item.date}</td>
+                        <td class="p-3 font-bold text-indigo-600">${item.susScore}</td>
+                        <td class="p-3"><span class="px-2 py-0.5 bg-slate-100 rounded text-xs font-bold">${item.grade}</span></td>
+                        <td class="p-3 text-slate-700">${item.adjective}</td>
+                        <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-medium ${item.acceptability === 'Acceptable' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${item.acceptability}</span></td>
+                        <td class="p-3 text-right">
+                            <button onclick="deleteSUS(${item.id})" class="text-slate-400 hover:text-rose-600 transition"><i class="fa-solid fa-trash-can"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderASQTable() {
+            const tbody = document.getElementById('asq-table-body');
+            tbody.innerHTML = '';
+            if(asqData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Belum ada data penilaian ASQ.</td></tr>`;
+                return;
+            }
+            asqData.forEach(item => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-3 font-medium text-slate-800">${item.respondent}</td>
+                        <td class="p-3 text-slate-700">${item.scenario}</td>
+                        <td class="p-3 text-slate-600">${item.time} detik</td>
+                        <td class="p-3 font-bold text-sky-600">${item.avg}</td>
+                        <td class="p-3 text-slate-500 italic">${item.notes}</td>
+                        <td class="p-3 text-right">
+                            <button onclick="deleteASQ(${item.id})" class="text-slate-400 hover:text-rose-600 transition"><i class="fa-solid fa-trash-can"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderMasterTable() {
+            const tbody = document.getElementById('master-table-body');
+            tbody.innerHTML = '';
+            let combined = [];
+            susData.forEach(d => combined.push({ type: 'SUS', resp: d.respondent, detail: `Evaluasi SUS (Tanggal: ${d.date})`, score: d.susScore + ' / 100', note: `Adjektif: ${d.adjective}` }));
+            asqData.forEach(d => combined.push({ type: 'ASQ', resp: d.respondent, detail: d.scenario, score: d.avg + ' / 7.0', note: `Waktu: ${d.time}s | ${d.notes}` }));
+
+            if(combined.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Belum ada data evaluasi tersimpan.</td></tr>`;
+                return;
+            }
+
+            combined.forEach(item => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-3"><span class="px-2.5 py-1 rounded-lg text-xs font-bold ${item.type === 'SUS' ? 'bg-indigo-100 text-indigo-800' : 'bg-sky-100 text-sky-800'}">${item.type}</span></td>
+                        <td class="p-3 font-medium text-slate-800">${item.resp}</td>
+                        <td class="p-3 text-slate-700">${item.detail}</td>
+                        <td class="p-3 font-bold text-slate-800">${item.score}</td>
+                        <td class="p-3 text-slate-500">${item.note}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Render Charts with Chart.js
+        function renderCharts() {
+            // 1. SUS Adjective Distribution Chart
+            const adjCounts = { 'Best Imaginable': 0, 'Excellent': 0, 'Good': 0, 'OK': 0, 'Poor': 0, 'Worst Imaginable': 0 };
+            susData.forEach(d => {
+                if(adjCounts[d.adjective] !== undefined) adjCounts[d.adjective]++;
+                else adjCounts['Good']++;
+            });
+
+            const ctxSUS = document.getElementById('susChart').getContext('2d');
+            if(susChartInstance) susChartInstance.destroy();
+            susChartInstance = new Chart(ctxSUS, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(adjCounts),
+                    datasets: [{
+                        data: Object.values(adjCounts),
+                        backgroundColor: ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#f97316', '#e11d48'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Inter', size: 11 } } }
+                    }
+                }
+            });
+
+            // 2. ASQ Average per Scenario Chart
+            const scenarioScores = {};
+            asqData.forEach(d => {
+                if(!scenarioScores[d.scenario]) scenarioScores[d.scenario] = { total: 0, count: 0 };
+                scenarioScores[d.scenario].total += d.avg;
+                scenarioScores[d.scenario].count++;
+            });
+
+            const scenarioLabels = Object.keys(scenarioScores);
+            const scenarioAverages = scenarioLabels.map(s => Math.round((scenarioScores[s].total / scenarioScores[s].count) * 100) / 100);
+
+            const ctxASQ = document.getElementById('asqChart').getContext('2d');
+            if(asqChartInstance) asqChartInstance.destroy();
+            asqChartInstance = new Chart(ctxASQ, {
+                type: 'bar',
+                data: {
+                    labels: scenarioLabels.map(s => s.split(':')[0]), // Shorten label
+                    datasets: [{
+                        label: 'Rata-rata Skor ASQ',
+                        data: scenarioAverages,
+                        backgroundColor: '#6366f1',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, max: 7, ticks: { stepSize: 1 } }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // Export Functions
+        function exportCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,Tipe,Responden,Detail/Skenario,Skor,Catatan\n";
+            susData.forEach(d => {
+                csvContent += `SUS,"${d.respondent}","Tanggal: ${d.date}",${d.susScore},"Adjektif: ${d.adjective}"\n`;
+            });
+            asqData.forEach(d => {
+                csvContent += `ASQ,"${d.respondent}","${d.scenario}",${d.avg},"Waktu: ${d.time}s | ${d.notes}"\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "laporan_evaluasi_asq_sus.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("Laporan CSV berhasil diunduh!");
+        }
+
+        function exportJSON() {
+            const dataObj = { sus: susData, asq: asqData };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataObj, null, 2));
+            const link = document.createElement("a");
+            link.setAttribute("href", dataStr);
+            link.setAttribute("download", "backup_data_asq_sus.json");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("Backup JSON berhasil diunduh!");
+        }
+
+        function resetDataModal() {
+            if(confirm("Apakah Anda yakin ingin mereset seluruh data ke default awal?")) {
+                susData = defaultSUSData;
+                asqData = defaultASQData;
+                saveData();
+                refreshAll();
+                showToast("Data berhasil direset ke sampel default.");
+            }
+        }
+
+        // Modal Helpers
+        function openModal(type) {
+            document.getElementById('modal-container').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-container').classList.add('hidden');
+        }
+
+        // Toast Helper
+        function showToast(msg, type='success') {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-msg');
+            msgEl.innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
